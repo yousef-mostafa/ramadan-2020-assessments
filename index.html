@@ -12,7 +12,7 @@
   <body>
     <div class="container my-5">
       <div class="formContainer my-5">
-        <form action="" method="POST">
+        <form id="submitVideo">
           <div class="row">
             <div class="col-md">
               <div class="form-group">
@@ -55,7 +55,7 @@
                   name="target_level"
                   placeholder="Write your name here"
                 >
-                  <option value="begineer">Beginner</option>
+                  <option value="beginner">Beginner</option>
                   <option value="medium">Medium</option>
                   <option value="advanced">Advanced</option>
                 </select>
@@ -125,5 +125,22 @@
         </div>
       </div>
     </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded" ,  ()=>{
+        let formVideo = document.querySelector("#submitVideo");
+
+        formVideo.addEventListener("submit" , (e)=>{
+          e.preventDefault();
+          let dataForm = new FormData(formVideo);
+          
+          fetch("http://localhost:7777/video-request" ,{
+            method :'POST',
+            body: dataForm,
+          })
+          .then((data) => console.log(data))
+        })
+      })
+    </script>
   </body>
 </html>
