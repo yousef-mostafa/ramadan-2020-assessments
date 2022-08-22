@@ -1,6 +1,6 @@
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = ["Sun", "Mon", "Tues", "Wed", "Thu", "Fri", "Sat"];
-sorted = false
+let sorted_topVoted = false , search_key = "";
 // func to load video posts from db
   function loadVideo(videoEle) {
           let submit_date = new Date (videoEle.submit_date)
@@ -41,16 +41,30 @@ sorted = false
           return videoItem;
   }
 
-function getAllVideos(sort) {
+// to delay request server in search until user write final letter
+function debounce(fn , time){
+  let timeout ;
+  return function(...args){
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this , args), time);
+  }
+}
+function getAllVideos(sorted_topVoted=false , search_key="") {
   let videoList = document.querySelector("#listOfRequests");
   videoList.innerHTML = "";
+  // get all request from  '/video-request' and list them
   fetch("http://localhost:7777/video-request")
     .then((bolb) => bolb.json())
-    .then((data) => { 
-      if (sort)
-        data = Array.from(data).sort((prev , next) => {return (next.votes.ups - next.votes.downs) - (prev.votes.ups - prev.votes.downs) });
-
-      // get all request from  '/video-request' and list them
+    .then((data) => {
+      // data filtration
+      if (sorted_topVoted)
+        data = data.sort((prev , next) => {return (next.votes.ups - next.votes.downs) - (prev.votes.ups - prev.votes.downs) });
+      
+      if(search_key !== ""){
+        const regExp =  new RegExp(search_key,'gi');
+        data = data.filter(item => item.topic_title.match(regExp))
+      }
+      
       data.forEach((videoEle) => {
         videoList.append(loadVideo(videoEle));
         let vote_up = document.getElementById(`vote_ups_${videoEle._id}`);
@@ -93,7 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let formVideo = document.querySelector("#submitVideo");
   let sort_topVote = document.querySelector("#sort_topVote");
   let sort_new = document.querySelector("#sort_new");
-  getAllVideos(sorted);
+  let search = document.querySelector("#search")
+  getAllVideos(sorted_topVoted , search_key);
   
   // submit request
   formVideo.addEventListener("submit", (e) => {
@@ -102,25 +117,32 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("http://localhost:7777/video-request", {
       method: "POST",
       body: dataForm,
-    }).then(() => getAllVideos(sorted));
+    }).then(() => {
+      getAllVideos(sorted_topVoted , search_key);
+      search.value = "";
+    });
   });
 
   // for sort
   sort_topVote.addEventListener("click" , function(){
-    sorted = true;
-    getAllVideos(sorted);
+    sorted_topVoted = true;
+    getAllVideos(sorted_topVoted , search_key);
     this.classList.add("btn-primary");
     this.classList.remove("btn-success");
     sort_new.classList.add("btn-success");
     sort_new.classList.remove("btn-primary");
   })
   sort_new.addEventListener("click" , function(){
-    sorted = false
-    getAllVideos(sorted);
+    sorted_topVoted = false
+    getAllVideos(sorted_topVoted , search_key);
     this.classList.add("btn-primary");
     this.classList.remove("btn-success");
     sort_topVote.classList.add("btn-success");
     sort_topVote.classList.remove("btn-primary");
   })
 
+  search.addEventListener("input" , debounce(function(e) {
+    search_key= e.target.value;
+    getAllVideos(sorted_topVoted , search_key);
+  } , 300))
 });

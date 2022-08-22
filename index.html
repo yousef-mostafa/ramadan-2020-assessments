@@ -70,9 +70,12 @@
     <hr />
 
     <h1 class="mb-4">List of requested videos</h1>
-    <div class="d-flex">
-      <button class="btn btn-success m-2" id="sort_topVote">Top voted</button>
-      <button class="btn btn-primary m-2" id="sort_new">New post</button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex">
+        <button class="btn btn-success m-2" id="sort_topVote">Top voted</button>
+        <button class="btn btn-primary m-2" id="sort_new">New post</button>
+      </div>
+      <input type="search" class="form-control" style="width: auto;" id="search" placeholder="Topic name">
     </div>
     <div id="listOfRequests" style="height: 500px;">
 
