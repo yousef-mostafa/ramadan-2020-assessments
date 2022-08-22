@@ -26,6 +26,7 @@ app.post("/video-request", upload.none(), async (req, res, next) => {
   next();
 });
 
+//for sorting video
 app.get('/video-request', async (req, res, next) => {
   const data = await VideoRequestData.getAllVideoRequests();
   res.send(data);
@@ -44,6 +45,7 @@ app.post('/users/login', async (req, res, next) => {
   next();
 });
 
+// to vote on video
 app.use(express.json());
 
 app.put('/video-request/vote', async (req, res, next) => {
@@ -53,6 +55,7 @@ app.put('/video-request/vote', async (req, res, next) => {
   next();
 });
 
+// to update video link and time upload video
 app.put('/video-request', async (req, res, next) => {
   const { id, status, resVideo } = req.body;
 

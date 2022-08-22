@@ -1,6 +1,6 @@
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = ["Sun", "Mon", "Tues", "Wed", "Thu", "Fri", "Sat"];
-  let vote; 
+sorted = false
 // func to load video posts from db
   function loadVideo(videoEle) {
           let submit_date = new Date (videoEle.submit_date)
@@ -41,53 +41,59 @@ const days = ["Sun", "Mon", "Tues", "Wed", "Thu", "Fri", "Sat"];
           return videoItem;
   }
 
-function getAllVideos() {
-  // get all request from  '/video-request' and list them
-    fetch("http://localhost:7777/video-request")
-      .then((bolb) => bolb.json())
-      .then((data) => {
-        let videoList = document.querySelector("#listOfRequests");
-        videoList.innerHTML = "";
-        data.forEach((videoEle) => {
-          videoList.append(loadVideo(videoEle));
-          let vote_up = document.getElementById(`vote_ups_${videoEle._id}`);
-          let vote_down = document.getElementById(`vote_downs_${videoEle._id}`);
-          let vote
-          vote_up.addEventListener("click" , () =>{
-            vote = document.querySelector(`#vote_${videoEle._id}`);
-            fetch('http://localhost:7777/video-request/vote',{
-              method: 'PUT',
-              headers: {'content-Type' :'application/json'},
-              body:JSON.stringify({
-                id: videoEle._id,
-                vote_type: "ups"
-              })
-            }).then((bolb) => bolb.json())
-            .then((data) => {
-              vote.innerHTML = `${data.ups - data.downs}`
-            })
-          })
+function getAllVideos(sort) {
+  let videoList = document.querySelector("#listOfRequests");
+  videoList.innerHTML = "";
+  fetch("http://localhost:7777/video-request")
+    .then((bolb) => bolb.json())
+    .then((data) => { 
+      if (sort)
+        data = Array.from(data).sort((prev , next) => {return (next.votes.ups - next.votes.downs) - (prev.votes.ups - prev.votes.downs) });
 
-          vote_down.addEventListener("click" , () =>{
-            vote = document.querySelector(`#vote_${videoEle._id}`);
-            fetch('http://localhost:7777/video-request/vote',{
-              method: 'PUT',
-              headers: {'content-Type' :'application/json'},
-              body:JSON.stringify({
-                id: videoEle._id,
-                vote_type: "downs"
-              })
-            }).then((bolb) => bolb.json())
-            .then((data) => {
-              vote.innerHTML = `${data.ups - data.downs }`
+      // get all request from  '/video-request' and list them
+      data.forEach((videoEle) => {
+        videoList.append(loadVideo(videoEle));
+        let vote_up = document.getElementById(`vote_ups_${videoEle._id}`);
+        let vote_down = document.getElementById(`vote_downs_${videoEle._id}`);
+        let vote
+        vote_up.addEventListener("click" , () =>{
+          vote = document.querySelector(`#vote_${videoEle._id}`);
+          fetch('http://localhost:7777/video-request/vote',{
+            method: 'PUT',
+            headers: {'content-Type' :'application/json'},
+            body:JSON.stringify({
+              id: videoEle._id,
+              vote_type: "ups"
             })
+          }).then((bolb) => bolb.json())
+          .then((data) => {
+            vote.innerHTML = `${data.ups - data.downs}`
           })
         })
-      })
-  }
+    
+        vote_down.addEventListener("click" , () =>{
+          vote = document.querySelector(`#vote_${videoEle._id}`);
+          fetch('http://localhost:7777/video-request/vote',{
+            method: 'PUT',
+            headers: {'content-Type' :'application/json'},
+            body:JSON.stringify({
+              id: videoEle._id,
+              vote_type: "downs"
+            })
+          }).then((bolb) => bolb.json())
+          .then((data) => {
+            vote.innerHTML = `${data.ups - data.downs }`
+          })
+        })
+    })  
+  })
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   let formVideo = document.querySelector("#submitVideo");
-  getAllVideos();
+  let sort_topVote = document.querySelector("#sort_topVote");
+  let sort_new = document.querySelector("#sort_new");
+  getAllVideos(sorted);
   
   // submit request
   formVideo.addEventListener("submit", (e) => {
@@ -96,7 +102,25 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("http://localhost:7777/video-request", {
       method: "POST",
       body: dataForm,
-    }).then(() => getAllVideos());
+    }).then(() => getAllVideos(sorted));
   });
+
+  // for sort
+  sort_topVote.addEventListener("click" , function(){
+    sorted = true;
+    getAllVideos(sorted);
+    this.classList.add("btn-primary");
+    this.classList.remove("btn-success");
+    sort_new.classList.add("btn-success");
+    sort_new.classList.remove("btn-primary");
+  })
+  sort_new.addEventListener("click" , function(){
+    sorted = false
+    getAllVideos(sorted);
+    this.classList.add("btn-primary");
+    this.classList.remove("btn-success");
+    sort_topVote.classList.add("btn-success");
+    sort_topVote.classList.remove("btn-primary");
+  })
 
 });
