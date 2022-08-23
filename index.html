@@ -11,18 +11,24 @@
 <body>
   <div class="container my-5">
     <div class="formContainer my-5">
-      <form id="submitVideo">
+      <form id="submitVideo" novalidate>
         <div class="row">
           <div class="col-md">
             <div class="form-group">
               <label for="author_name">Your name *</label>
-              <input class="form-control" name="author_name" placeholder="Write your name here" />
+              <input class="form-control" name="author_name" placeholder="Write your name here" type="text"/>
+              <div class="invalid-feedback">
+                please enter your name!
+              </div>
             </div>
           </div>
           <div class="col-md">
             <div class="form-group">
               <label for="author_email">Your email *</label>
-              <input class="form-control" name="author_email" placeholder="Write your email here" />
+              <input class="form-control" name="author_email" placeholder="Write your email here" type="email"/>
+              <div class="invalid-feedback">
+                please enter your email!
+              </div>
             </div>
           </div>
         </div>
@@ -31,13 +37,16 @@
           <div class="col-md">
             <div class="form-group">
               <label for="topic_title">Topic *</label>
-              <input class="form-control" name="topic_title" placeholder="Write your suggested topic here" />
+              <input class="form-control" name="topic_title" placeholder="Write your suggested topic here" type="text"/>
+              <div class="invalid-feedback">
+                please enter your topic name!
+              </div>
             </div>
           </div>
           <div class="col-md">
             <div class="form-group">
               <label for="target_level">Target level</label>
-              <select class="form-control" name="target_level" placeholder="Write your name here">
+              <select class="form-control" name="target_level" placeholder="Write your name here" >
                 <option value="beginner">Beginner</option>
                 <option value="medium">Medium</option>
                 <option value="advanced">Advanced</option>
@@ -51,6 +60,9 @@
               <label for="topic_details">More details *</label>
               <textarea class="form-control" name="topic_details"
                 placeholder="Write your topic in more details here"></textarea>
+                <div class="invalid-feedback">
+                  please enter more details about your topic!
+                </div>
             </div>
           </div>
           <div class="col-md">

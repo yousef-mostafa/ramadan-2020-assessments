@@ -1,6 +1,7 @@
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = ["Sun", "Mon", "Tues", "Wed", "Thu", "Fri", "Sat"];
 let sorted_topVoted = false , search_key = "";
+
 // func to load video posts from db
   function loadVideo(videoEle) {
           let submit_date = new Date (videoEle.submit_date)
@@ -41,7 +42,7 @@ let sorted_topVoted = false , search_key = "";
           return videoItem;
   }
 
-// to delay request server in search until user write final letter
+// to delay request server in search or validation until user write final letter
 function debounce(fn , time){
   let timeout ;
   return function(...args){
@@ -49,6 +50,7 @@ function debounce(fn , time){
     timeout = setTimeout(() => fn.apply(this , args), time);
   }
 }
+
 function getAllVideos(sorted_topVoted=false , search_key="") {
   let videoList = document.querySelector("#listOfRequests");
   videoList.innerHTML = "";
@@ -114,6 +116,74 @@ document.addEventListener("DOMContentLoaded", () => {
   formVideo.addEventListener("submit", (e) => {
     e.preventDefault();
     let dataForm = new FormData(formVideo);
+
+    // clint-side validation
+    let validationArray = []
+    let inputs_text = formVideo.querySelectorAll("input[type=text]");
+    let input_email = formVideo.querySelector("input[type = email]");
+    let first_input_textArea = formVideo.querySelector("textarea");
+
+    function isEmpty(field) {
+      if (field.value === ""){
+        field.classList.add("is-invalid");
+        return false;
+      }
+      else{
+        field.classList.remove("is-invalid");
+        return true;
+      }
+    }
+
+  validationArray.push(isEmpty(input_email));
+  validationArray.push(isEmpty(first_input_textArea));
+
+  // not empty && special validation for topic name < 100
+  inputs_text.forEach(text => {
+    validationArray.push(isEmpty(text));
+    if (isEmpty(text)){
+      if (text.getAttribute("name") === "topic_title"){
+        let feedback_topic = formVideo.querySelector("input[name = topic_title] + div");
+        if (text.value.length > 100){
+          feedback_topic.innerHTML = "please enter topic name less than 100 letter!"
+          text.classList.add("is-invalid");
+          validationArray.push(false);
+        }
+        else{
+          feedback_topic.innerHTML = "please enter your topic name!";
+          text.classList.remove("is-invalid");
+          validationArray.push(true);
+        }
+      }
+    }
+  });
+
+  // special validation for email
+  if (isEmpty(input_email)){
+    let feedback_email = formVideo.querySelector("input[type = email] + div");
+    if (!input_email.value.includes("@") || !input_email.value.includes(".com")){
+          input_email.classList.add("is-invalid");
+          feedback_email.innerHTML = "your email is not valid, please try again with correct email!"
+          validationArray.push(false);
+        }
+        else{
+          input_email.classList.remove("is-invalid");
+          feedback_email.innerHTML = "please enter your email!"
+          validationArray.push(true);
+        }
+  }
+
+  // * to remove invalid massage on fill 
+  let allInvalidEle = formVideo.querySelectorAll(".is-invalid");
+  if (allInvalidEle.length){
+    allInvalidEle.forEach(element => {
+      element.addEventListener("input" , function () {
+        this.classList.remove("is-invalid")
+      });
+      return;
+    })
+  }
+
+  if (validationArray.every(item => item === true)){
     fetch("http://localhost:7777/video-request", {
       method: "POST",
       body: dataForm,
@@ -121,7 +191,8 @@ document.addEventListener("DOMContentLoaded", () => {
       getAllVideos(sorted_topVoted , search_key);
       search.value = "";
     });
-  });
+  }
+});
 
   // for sort
   sort_topVote.addEventListener("click" , function(){
@@ -145,4 +216,5 @@ document.addEventListener("DOMContentLoaded", () => {
     search_key= e.target.value;
     getAllVideos(sorted_topVoted , search_key);
   } , 300))
+
 });
