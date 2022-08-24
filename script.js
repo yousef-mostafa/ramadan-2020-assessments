@@ -109,7 +109,7 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  
+
   let formVideo = document.querySelector("#submitVideo");
   let sort_topVote = document.querySelector("#sort_topVote");
   let sort_new = document.querySelector("#sort_new");
@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let logout_btn = document.querySelector("#logout");
   let username = document.querySelector("#username")
   getAllVideos(sorted_topVoted, search_key);
-  
+
   // to load username
   username.innerHTML = localStorage.getItem("name");
 
@@ -125,8 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
   formVideo.addEventListener("submit", (e) => {
     e.preventDefault();
     let dataForm = new FormData(formVideo);
-    dataForm.append("author_name" , localStorage.getItem("name"))
-    dataForm.append("author_email" , localStorage.getItem("name"))
+    dataForm.append("author_name", localStorage.getItem("name"))
+    dataForm.append("author_email", localStorage.getItem("name"))
 
     // clint-side validation
     let validationArray = []
@@ -209,8 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
     getAllVideos(sorted_topVoted, search_key);
   }, 300))
 
-// logout to clear local storage
-  logout_btn.addEventListener("click" , ()=>{
+  // logout to clear local storage
+  logout_btn.addEventListener("click", () => {
     localStorage.clear();
     window.location.replace("http://127.0.0.1:5500/login.html")
   })
