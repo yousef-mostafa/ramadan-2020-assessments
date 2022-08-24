@@ -10,29 +10,14 @@
 
 <body>
   <div class="container my-5">
-    <div class="formContainer my-5">
+    <div class="login mb-5">
+      <div class="row justify-content-end align-items-center gap-3">
+        <div class="text-dark col-md-2">welcome <strong id="username"> Yousef</strong></div>
+        <button class="btn btn-danger col-md-1" id="logout">Log out</button>
+      </div>
+    </div>
+    <div class="formContainer">
       <form id="submitVideo" novalidate>
-        <div class="row">
-          <div class="col-md">
-            <div class="form-group">
-              <label for="author_name">Your name *</label>
-              <input class="form-control" name="author_name" placeholder="Write your name here" type="text"/>
-              <div class="invalid-feedback">
-                please enter your name!
-              </div>
-            </div>
-          </div>
-          <div class="col-md">
-            <div class="form-group">
-              <label for="author_email">Your email *</label>
-              <input class="form-control" name="author_email" placeholder="Write your email here" type="email"/>
-              <div class="invalid-feedback">
-                please enter your email!
-              </div>
-            </div>
-          </div>
-        </div>
-        <hr />
         <div class="row">
           <div class="col-md">
             <div class="form-group">
@@ -84,7 +69,7 @@
     <h1 class="mb-4">List of requested videos</h1>
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="d-flex">
-        <button class="btn btn-success m-2" id="sort_topVote">Top voted</button>
+        <button class="btn btn-secondary m-2" id="sort_topVote">Top voted</button>
         <button class="btn btn-primary m-2" id="sort_new">New post</button>
       </div>
       <input type="search" class="form-control" style="width: auto;" id="search" placeholder="Topic name">

@@ -39,9 +39,10 @@ app.get('/users', async (req, res, next) => {
   next();
 });
 
-app.post('/users/login', async (req, res, next) => {
+const upload_login = multer();
+app.post('/users/login', upload_login.none(), async (req, res, next) => {
   const response = await UserData.createUser(req.body);
-  res.redirect(`http://localhost:5500?id=${response._id}`);
+  res.send(response);
   next();
 });
 
@@ -58,7 +59,6 @@ app.put('/video-request/vote', async (req, res, next) => {
 // to update video link and time upload video
 app.put('/video-request', async (req, res, next) => {
   const { id, status, resVideo } = req.body;
-
   const response = await VideoRequestData.updateRequest(id, status, resVideo);
   res.send(response);
   next();
