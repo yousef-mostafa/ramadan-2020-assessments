@@ -1,5 +1,9 @@
+let isAdmin = false;
 if (!localStorage.length) {
   window.location.replace("http://127.0.0.1:5500/login.html")
+}
+else if (localStorage.getItem("email") === "y1182001@gmail.com" && localStorage.getItem("name")=== "admin" ){
+  isAdmin = true
 }
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -12,6 +16,25 @@ function loadVideo(videoEle) {
   let videoItem = document.createElement("div");
   videoItem.classList.add("card", "mb-3");
   videoItem.innerHTML = `
+              ${isAdmin ? `<div class="card-header d-flex flex-row justify-content-between">
+              <div class="w-25">
+                <select class="form-control mr-5" id="video_statue_${videoEle._id}">
+                <option value="new">NEW</option>
+                <option value="planned">PLANNED</option>
+                <option value="done">DONE</option>
+                </select>
+              </div>
+              <div class="w-100 mx-5 input-group">
+                <input type="text" name="videoID" id="videoID_${videoEle._id}" class="form-control" placeholder="Enter your youtube video ID">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary px-4" id="save_videoID_${videoEle._id}">Save</button>
+                </div>
+              </div>
+              <div>
+                <button class="btn btn-danger px-5" id="delete_${videoEle._id}">Delete</button>
+              </div>
+            </div>`:""}
+            
               <div class="card-body d-flex justify-content-between flex-row">
               <div class="d-flex flex-column">
                 <h3>${videoEle.topic_title}</h3>
@@ -28,14 +51,12 @@ function loadVideo(videoEle) {
             </div>
             <div class="card-footer d-flex flex-row justify-content-between">
               <div>
-                <span class="text-info">${videoEle.status}</span>
+                <span class="text-info" id="status_${videoEle._id}">${videoEle.status.toUpperCase()}</span>
                 &bullet; added by <strong>${videoEle.author_name}</strong> on
                 <strong>${days[submit_date.getDay()]} ${months[submit_date.getMonth()]
     } ${submit_date.getDate()} ${submit_date.getFullYear()} at ${submit_date.getHours()}:${submit_date.getMinutes()}</strong> 
               </div>
-              <div
-                class="d-flex justify-content-center flex-column 408ml-auto mr-2"
-              >
+              <div class="d-flex justify-content-center flex-column 408ml-auto mr-2">
                 <div class="badge badge-success">
                   ${videoEle.target_level}
                 </div>
@@ -55,6 +76,20 @@ function debounce(fn, time) {
 }
 
 function voteSystem(videoID, voteList, vote_type) {
+  let vote_up = document.getElementById(`vote_ups_${videoID}`);
+  let vote_down = document.getElementById(`vote_downs_${videoID}`);
+
+  let vote_dir = vote_type === "ups" ? vote_up : vote_down;
+  let vote_other_dir = vote_type === "ups" ? vote_down : vote_up;
+
+  if (isAdmin) {
+    vote_dir.style.cursor = "not-allowed"
+    vote_other_dir.style.cursor = "not-allowed"
+    vote_dir.style.opacity = 0.5
+    vote_other_dir.style.opacity = 0.5;
+    return;
+  }
+
   // to make vote_type optional
   if (!vote_type) {
     if (voteList.ups.includes(localStorage.getItem("email")))
@@ -64,12 +99,7 @@ function voteSystem(videoID, voteList, vote_type) {
     else
       return;
   }
-  let vote_up = document.getElementById(`vote_ups_${videoID}`);
-  let vote_down = document.getElementById(`vote_downs_${videoID}`);
-
-  let vote_dir = vote_type === "ups" ? vote_up : vote_down;
-  let vote_other_dir = vote_type === "ups" ? vote_down : vote_up;
-
+  
   if (voteList[vote_type].includes(localStorage.getItem("email"))) {
     vote_dir.style.opacity = 1
     vote_other_dir.style.opacity = 0.5
@@ -98,23 +128,92 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
 
       data.forEach((videoEle) => {
         videoList.append(loadVideo(videoEle));
+        // for vote function
         let vote = document.querySelector(`#voteScore_${videoEle._id}`);
         let vote_btns = document.querySelectorAll(`[id^=vote_][id$=_${videoEle._id}]`);
         voteSystem(videoEle._id, videoEle.votes)
+        if (isAdmin){
+          let delete_btn = document.querySelector(`#delete_${videoEle._id}`);
+          let video_ID = document.querySelector(`#videoID_${videoEle._id}`);
+          let save_video_ID = document.querySelector(`#save_videoID_${videoEle._id}`);
+          let video_statue = document.querySelector(`#video_statue_${videoEle._id}`);
+          let status_span = document.querySelector(`#status_${videoEle._id}`)
+          // to set values from db on load
+          video_statue.value = videoEle.status;
+          video_ID.value = videoEle.video_ref.link;           
+
+          delete_btn.addEventListener("click" , ()=>{
+            fetch('http://localhost:7777/video-request', {
+              method: 'DELETE',
+              headers: { 'content-Type': 'application/json' },
+              body: JSON.stringify({ id: videoEle._id})
+            }).then((bolb) => bolb.json())
+              .then((data) => {
+                console.log(data);
+                getAllVideos(sorted_topVoted, search_key);
+              })
+          })
+
+          save_video_ID.addEventListener("click" , function(){
+            if (video_ID.value){
+              video_ID.classList.remove("is-invalid")
+              fetch('http://localhost:7777/video-request', {
+                method: 'PUT',
+                headers: { 'content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  id: videoEle._id,
+                  status: "done" ,
+                  resVideo: video_ID.value
+                })
+              }).then((bolb) => bolb.json())
+              .then((data) => {
+                video_ID.value = data.video_ref.link;
+                console.log(data.status);
+                status_span.innerHTML = data.status.toUpperCase();
+                video_statue.value = data.status;
+              })
+            }
+            else{
+              video_ID.classList.add("is-invalid");
+              video_ID.addEventListener("input", function () {
+                this.classList.remove("is-invalid")
+              });
+            }
+          })
+
+          video_statue.addEventListener("change" , function(e){
+            fetch('http://localhost:7777/video-request', {
+              method: 'PUT',
+              headers: { 'content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: videoEle._id,
+                status: e.target.value,
+                resVideo: videoEle.video_ref.link
+              })
+            }).then((bolb) => bolb.json())
+              .then((data) => {
+              status_span.innerHTML = data.status.toUpperCase()
+            })
+          })
+        }
+        else{
         vote_btns.forEach(btn => {
           let [, vote_type, id] = btn.getAttribute("id").split("_");//
           btn.addEventListener("click", function () {
-            fetch('http://localhost:7777/video-request/vote', {
-              method: 'PUT',
-              headers: { 'content-Type': 'application/json' },
-              body: JSON.stringify({ id, vote_type, user_email: localStorage.getItem("email") })
-            }).then((bolb) => bolb.json())
-              .then((data) => {
-                vote.innerHTML = `${data.ups.length - data.downs.length}`;
-                voteSystem(id, data, vote_type)
-              })
+            if (!isAdmin){
+              fetch('http://localhost:7777/video-request/vote', {
+                method: 'PUT',
+                headers: { 'content-Type': 'application/json' },
+                body: JSON.stringify({ id, vote_type, user_email: localStorage.getItem("email") })
+              }).then((bolb) => bolb.json())
+                .then((data) => {
+                  vote.innerHTML = `${data.ups.length - data.downs.length}`;
+                  voteSystem(id, data, vote_type)
+                })
+            }
           })
         });
+        }
       })
     })
 }
@@ -126,7 +225,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let sort_new = document.querySelector("#sort_new");
   let search = document.querySelector("#search");
   let logout_btn = document.querySelector("#logout");
-  let username = document.querySelector("#username")
+  let username = document.querySelector("#username");
+  if (isAdmin)
+    formVideo.classList.add("d-none")
   getAllVideos(sorted_topVoted, search_key);
 
   // to load username
@@ -192,6 +293,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }).then(() => {
         getAllVideos(sorted_topVoted, search_key);
         search.value = "";
+        // TODO clear inputs after submit
+        // dataForm.forEach(item => item.value = "")
       });
     }
   });

@@ -57,13 +57,15 @@ app.put('/video-request/vote', async (req, res, next) => {
 });
 
 // to update video link and time upload video
+app.use(express.json());
 app.put('/video-request', async (req, res, next) => {
   const { id, status, resVideo } = req.body;
   const response = await VideoRequestData.updateRequest(id, status, resVideo);
   res.send(response);
   next();
 });
-
+// to delete video 
+app.use(express.json());
 app.delete('/video-request', async (req, res, next) => {
   const response = await VideoRequestData.deleteRequest(req.body.id);
   res.send(response);
