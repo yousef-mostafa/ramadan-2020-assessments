@@ -10,7 +10,7 @@
 
 <body>
   <div class="container my-5">
-    <div class="login mb-5">
+    <div class="login-info mb-5">
       <div class="row justify-content-end align-items-center gap-3">
         <div class="text-dark col-md-2">welcome <strong id="username"> Yousef</strong></div>
         <button class="btn btn-danger col-md-1" id="logout">Log out</button>
@@ -22,7 +22,8 @@
           <div class="col-md">
             <div class="form-group">
               <label for="topic_title">Topic *</label>
-              <input class="form-control" name="topic_title" placeholder="Write your suggested topic here" type="text"/>
+              <input class="form-control" name="topic_title" placeholder="Write your suggested topic here"
+                type="text" />
               <div class="invalid-feedback">
                 please enter your topic name!
               </div>
@@ -31,7 +32,7 @@
           <div class="col-md">
             <div class="form-group">
               <label for="target_level">Target level</label>
-              <select class="form-control" name="target_level" placeholder="Write your name here" >
+              <select class="form-control" name="target_level" placeholder="Write your name here">
                 <option value="beginner">Beginner</option>
                 <option value="medium">Medium</option>
                 <option value="advanced">Advanced</option>
@@ -45,9 +46,9 @@
               <label for="topic_details">More details *</label>
               <textarea class="form-control" name="topic_details"
                 placeholder="Write your topic in more details here"></textarea>
-                <div class="invalid-feedback">
-                  please enter more details about your topic!
-                </div>
+              <div class="invalid-feedback">
+                please enter more details about your topic!
+              </div>
             </div>
           </div>
           <div class="col-md">
@@ -76,7 +77,7 @@
     </div>
     <div id="listOfRequests" style="height: 500px;">
 
-      <!-- <div class="card mb-3 d-none">
+    <!-- <div class="card mb-3 d-none">
         <div class="card-body d-flex justify-content-between flex-row">
           <div class="d-flex flex-column">
             <h3>Dummy Topic title</h3>

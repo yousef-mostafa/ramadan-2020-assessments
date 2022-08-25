@@ -22,7 +22,7 @@ function loadVideo(videoEle) {
               </div>
               <div class="d-flex flex-column text-center">
                 <a id="vote_ups_${videoEle._id}" class="btn btn-link">🔺</a>
-                <h3 id="vote_${videoEle._id}">${videoEle.votes.ups - videoEle.votes.downs}</h3>
+                <h3 id="voteScore_${videoEle._id}">${videoEle.votes.ups.length - videoEle.votes.downs.length}</h3>
                 <a id="vote_downs_${videoEle._id}" class="btn btn-link">🔻</a>
               </div>
             </div>
@@ -54,6 +54,32 @@ function debounce(fn, time) {
   }
 }
 
+function voteSystem(videoID, voteList, vote_type) {
+  // to make vote_type optional
+  if (!vote_type) {
+    if (voteList.ups.includes(localStorage.getItem("email")))
+      vote_type = "ups"
+    else if (voteList.downs.includes(localStorage.getItem("email")))
+      vote_type = "downs"
+    else
+      return;
+  }
+  let vote_up = document.getElementById(`vote_ups_${videoID}`);
+  let vote_down = document.getElementById(`vote_downs_${videoID}`);
+
+  let vote_dir = vote_type === "ups" ? vote_up : vote_down;
+  let vote_other_dir = vote_type === "ups" ? vote_down : vote_up;
+
+  if (voteList[vote_type].includes(localStorage.getItem("email"))) {
+    vote_dir.style.opacity = 1
+    vote_other_dir.style.opacity = 0.5
+  }
+  else {
+    vote_dir.style.opacity = 1
+    vote_other_dir.style.opacity = 1
+  }
+}
+
 function getAllVideos(sorted_topVoted = false, search_key = "") {
   let videoList = document.querySelector("#listOfRequests");
   videoList.innerHTML = "";
@@ -63,7 +89,7 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
     .then((data) => {
       // data filtration
       if (sorted_topVoted)
-        data = data.sort((prev, next) => { return (next.votes.ups - next.votes.downs) - (prev.votes.ups - prev.votes.downs) });
+        data = data.sort((prev, next) => { return (next.votes.ups.length - next.votes.downs.length) - (prev.votes.ups.length - prev.votes.downs.length) });
 
       if (search_key !== "") {
         const regExp = new RegExp(search_key, 'gi');
@@ -72,38 +98,23 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
 
       data.forEach((videoEle) => {
         videoList.append(loadVideo(videoEle));
-        let vote_up = document.getElementById(`vote_ups_${videoEle._id}`);
-        let vote_down = document.getElementById(`vote_downs_${videoEle._id}`);
-        let vote
-        vote_up.addEventListener("click", () => {
-          vote = document.querySelector(`#vote_${videoEle._id}`);
-          fetch('http://localhost:7777/video-request/vote', {
-            method: 'PUT',
-            headers: { 'content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: videoEle._id,
-              vote_type: "ups"
-            })
-          }).then((bolb) => bolb.json())
-            .then((data) => {
-              vote.innerHTML = `${data.ups - data.downs}`
-            })
-        })
-
-        vote_down.addEventListener("click", () => {
-          vote = document.querySelector(`#vote_${videoEle._id}`);
-          fetch('http://localhost:7777/video-request/vote', {
-            method: 'PUT',
-            headers: { 'content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: videoEle._id,
-              vote_type: "downs"
-            })
-          }).then((bolb) => bolb.json())
-            .then((data) => {
-              vote.innerHTML = `${data.ups - data.downs}`
-            })
-        })
+        let vote = document.querySelector(`#voteScore_${videoEle._id}`);
+        let vote_btns = document.querySelectorAll(`[id^=vote_][id$=_${videoEle._id}]`);
+        voteSystem(videoEle._id, videoEle.votes)
+        vote_btns.forEach(btn => {
+          let [, vote_type, id] = btn.getAttribute("id").split("_");//
+          btn.addEventListener("click", function () {
+            fetch('http://localhost:7777/video-request/vote', {
+              method: 'PUT',
+              headers: { 'content-Type': 'application/json' },
+              body: JSON.stringify({ id, vote_type, user_email: localStorage.getItem("email") })
+            }).then((bolb) => bolb.json())
+              .then((data) => {
+                vote.innerHTML = `${data.ups.length - data.downs.length}`;
+                voteSystem(id, data, vote_type)
+              })
+          })
+        });
       })
     })
 }
