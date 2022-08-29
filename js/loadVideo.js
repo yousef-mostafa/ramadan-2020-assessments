@@ -63,7 +63,7 @@ export function loadVideo({
                 </p>
               </div>
               <div class="d-flex flex-row">
-                <iframe id="iframe_${id}" width="300" height="115" src="" class="${videoRef.link ? "" : "d-none"}"></iframe>
+                <iframe id="iframe_${id}" width="300" height="115" src = "https://www.youtube.com/embed/${videoRef.link}" class="${videoRef.link ? "" : "d-none"}"></iframe>
                 <div class="d-flex flex-column text-center mx-4">
                   <a id="vote_ups_${id}" class="btn btn-link">🔺</a>
                   <h3 id="voteScore_${id}">${voteScore}</h3>
@@ -86,5 +86,3 @@ export function loadVideo({
               `;
   return videoItem;
 }
-// TODO
-// src = "https://www.youtube.com/embed/${videoRef.link}"

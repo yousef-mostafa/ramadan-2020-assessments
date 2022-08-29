@@ -62,8 +62,7 @@ function getAllVideos(sorted_topVoted = false, search_key = "", filter_key = "AL
                   status_span.innerHTML = data.status.toUpperCase();
                   video_statue.value = data.status;
                   video_frame.classList.remove("d-none")
-                  // TODO
-                  // video_frame.src = `https://www.youtube.com/embed/${data.video_ref.link}`;
+                  video_frame.src = `https://www.youtube.com/embed/${data.video_ref.link}`;
                 })
             }
             else {
@@ -128,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     let dataForm = new FormData(formVideo);
     dataForm.append("author_name", localStorage.getItem("name"))
-    dataForm.append("author_email", localStorage.getItem("name"))
+    dataForm.append("author_email", localStorage.getItem("email"))
 
     // clint-side validation
     let validationArray = []
@@ -181,8 +180,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(() => {
           getAllVideos(sorted_topVoted, search_key, filter_key);
           search.value = "";
-          // TODO clear inputs after submit
-          // dataForm.forEach(item => item.value = "")
+          // clear inputs after submit
+          let text_input = formVideo.querySelector("input").value = ""
+          let textarea = formVideo.querySelectorAll("textarea");
+          textarea.forEach(item => item.value = "")
         });
     }
   });
