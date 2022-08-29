@@ -8,7 +8,7 @@ else if (localStorage.getItem("email") === "y1182001@gmail.com" && localStorage.
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const days = ["Sun", "Mon", "Tues", "Wed", "Thu", "Fri", "Sat"];
-let sorted_topVoted = false, search_key = "";
+let sorted_topVoted = false, search_key = "", filter_key = "ALL";
 
 // func to load video posts from db
 function loadVideo(videoEle) {
@@ -43,15 +43,18 @@ function loadVideo(videoEle) {
                 ${videoEle.expected_result && `<strong>Expected results: </strong> ${videoEle.expected_result}`}
                 </p>
               </div>
-              <div class="d-flex flex-column text-center">
-                <a id="vote_ups_${videoEle._id}" class="btn btn-link">🔺</a>
-                <h3 id="voteScore_${videoEle._id}">${videoEle.votes.ups.length - videoEle.votes.downs.length}</h3>
-                <a id="vote_downs_${videoEle._id}" class="btn btn-link">🔻</a>
+              <div class="d-flex flex-row">
+                <iframe id="iframe_${videoEle._id}" width="300" height="115" src="https://www.youtube.com/embed/${videoEle.video_ref.link}" class="${videoEle.video_ref.link ? "": "d-none"}"></iframe>
+                <div class="d-flex flex-column text-center mx-4">
+                  <a id="vote_ups_${videoEle._id}" class="btn btn-link">🔺</a>
+                  <h3 id="voteScore_${videoEle._id}">${videoEle.votes.ups.length - videoEle.votes.downs.length}</h3>
+                  <a id="vote_downs_${videoEle._id}" class="btn btn-link">🔻</a>
+                </div>
               </div>
             </div>
             <div class="card-footer d-flex flex-row justify-content-between">
               <div>
-                <span class="text-info" id="status_${videoEle._id}">${videoEle.status.toUpperCase()}</span>
+                <span class="${videoEle.status === "done" ? "text-success font-weight-bold" : "text-info"}" id="status_${videoEle._id}">${videoEle.status.toUpperCase()}</span>
                 &bullet; added by <strong>${videoEle.author_name}</strong> on
                 <strong>${days[submit_date.getDay()]} ${months[submit_date.getMonth()]
     } ${submit_date.getDate()} ${submit_date.getFullYear()} at ${submit_date.getHours()}:${submit_date.getMinutes()}</strong> 
@@ -75,18 +78,15 @@ function debounce(fn, time) {
   }
 }
 
-function voteSystem(videoID, voteList, vote_type) {
-  let vote_up = document.getElementById(`vote_ups_${videoID}`);
-  let vote_down = document.getElementById(`vote_downs_${videoID}`);
+function voteSystem(videoEle, voteList, vote_type) {
+  let vote_up = document.getElementById(`vote_ups_${videoEle._id}`);
+  let vote_down = document.getElementById(`vote_downs_${videoEle._id}`);
 
-  let vote_dir = vote_type === "ups" ? vote_up : vote_down;
-  let vote_other_dir = vote_type === "ups" ? vote_down : vote_up;
-
-  if (isAdmin) {
-    vote_dir.style.cursor = "not-allowed"
-    vote_other_dir.style.cursor = "not-allowed"
-    vote_dir.style.opacity = 0.5
-    vote_other_dir.style.opacity = 0.5;
+  if (isAdmin || videoEle.status === "done") {
+    vote_up.style.cursor = "not-allowed"
+    vote_down.style.cursor = "not-allowed"
+    vote_up.style.opacity = 0.5
+    vote_down.style.opacity = 0.5;
     return;
   }
 
@@ -99,6 +99,8 @@ function voteSystem(videoID, voteList, vote_type) {
     else
       return;
   }
+  let vote_dir = vote_type === "ups" ? vote_up : vote_down;
+  let vote_other_dir = vote_type === "ups" ? vote_down : vote_up;
   
   if (voteList[vote_type].includes(localStorage.getItem("email"))) {
     vote_dir.style.opacity = 1
@@ -110,7 +112,7 @@ function voteSystem(videoID, voteList, vote_type) {
   }
 }
 
-function getAllVideos(sorted_topVoted = false, search_key = "") {
+function getAllVideos(sorted_topVoted = false, search_key = "", filter_key ="ALL") {
   let videoList = document.querySelector("#listOfRequests");
   videoList.innerHTML = "";
   // get all request from  '/video-request' and list them
@@ -125,19 +127,25 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
         const regExp = new RegExp(search_key, 'gi');
         data = data.filter(item => item.topic_title.match(regExp))
       }
+      if (filter_key !== "ALL"){
+        const regExp = new RegExp(filter_key, 'gi');
+        data = data.filter(item => item.status.match(regExp))
+      }
 
       data.forEach((videoEle) => {
         videoList.append(loadVideo(videoEle));
         // for vote function
         let vote = document.querySelector(`#voteScore_${videoEle._id}`);
         let vote_btns = document.querySelectorAll(`[id^=vote_][id$=_${videoEle._id}]`);
-        voteSystem(videoEle._id, videoEle.votes)
+        voteSystem(videoEle, videoEle.votes)
+        // all admin functions
         if (isAdmin){
           let delete_btn = document.querySelector(`#delete_${videoEle._id}`);
           let video_ID = document.querySelector(`#videoID_${videoEle._id}`);
           let save_video_ID = document.querySelector(`#save_videoID_${videoEle._id}`);
           let video_statue = document.querySelector(`#video_statue_${videoEle._id}`);
-          let status_span = document.querySelector(`#status_${videoEle._id}`)
+          let status_span = document.querySelector(`#status_${videoEle._id}`);
+          let video_frame = document.querySelector(`#iframe_${videoEle._id}`)
           // to set values from db on load
           video_statue.value = videoEle.status;
           video_ID.value = videoEle.video_ref.link;           
@@ -150,7 +158,7 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
             }).then((bolb) => bolb.json())
               .then((data) => {
                 console.log(data);
-                getAllVideos(sorted_topVoted, search_key);
+                getAllVideos(sorted_topVoted, search_key , filter_key);
               })
           })
 
@@ -168,9 +176,12 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
               }).then((bolb) => bolb.json())
               .then((data) => {
                 video_ID.value = data.video_ref.link;
-                console.log(data.status);
+                status_span.classList.remove("text-info")
+                status_span.classList.add("text-success","font-weight-bold")
                 status_span.innerHTML = data.status.toUpperCase();
                 video_statue.value = data.status;
+                video_frame.classList.remove("d-none")
+                video_frame.src = `https://www.youtube.com/embed/${data.video_ref.link}`;
               })
             }
             else{
@@ -188,19 +199,26 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
               body: JSON.stringify({
                 id: videoEle._id,
                 status: e.target.value,
-                resVideo: videoEle.video_ref.link
+                resVideo: e.target.value !== "done" ? "": "videoEle.video_ref.link"
               })
             }).then((bolb) => bolb.json())
               .then((data) => {
-              status_span.innerHTML = data.status.toUpperCase()
+                if (data.status !== "done"){
+                  status_span.classList.add("text-info")
+                  status_span.classList.remove("text-success","font-weight-bold")
+                }
+                status_span.innerHTML = data.status.toUpperCase();
+                video_ID.value = "";
+                video_frame.classList.add("d-none")
             })
           })
         }
+        // all user functions
         else{
         vote_btns.forEach(btn => {
           let [, vote_type, id] = btn.getAttribute("id").split("_");//
           btn.addEventListener("click", function () {
-            if (!isAdmin){
+            if (!isAdmin && videoEle.status !== "done"){
               fetch('http://localhost:7777/video-request/vote', {
                 method: 'PUT',
                 headers: { 'content-Type': 'application/json' },
@@ -208,7 +226,7 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
               }).then((bolb) => bolb.json())
                 .then((data) => {
                   vote.innerHTML = `${data.ups.length - data.downs.length}`;
-                  voteSystem(id, data, vote_type)
+                  voteSystem(videoEle, data, vote_type)
                 })
             }
           })
@@ -219,6 +237,7 @@ function getAllVideos(sorted_topVoted = false, search_key = "") {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  getAllVideos(sorted_topVoted, search_key, filter_key);
 
   let formVideo = document.querySelector("#submitVideo");
   let sort_topVote = document.querySelector("#sort_topVote");
@@ -226,9 +245,25 @@ document.addEventListener("DOMContentLoaded", () => {
   let search = document.querySelector("#search");
   let logout_btn = document.querySelector("#logout");
   let username = document.querySelector("#username");
-  if (isAdmin)
-    formVideo.classList.add("d-none")
-  getAllVideos(sorted_topVoted, search_key);
+  let filter = document.querySelector("#filter").classList.remove("d-none");
+  let filter_btn = document.querySelectorAll("#filter button");
+
+  filter_btn.forEach(btn => {
+    btn.addEventListener("click", function () {
+      // to remove active color 
+      filter_btn.forEach(btn => {
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-secondary")
+      })
+      // to add active color
+      this.classList.add("btn-primary");
+      this.classList.remove("btn-secondary");
+      filter_key = btn.innerHTML
+      getAllVideos(sorted_topVoted, search_key , filter_key);
+    })
+  })
+
+  isAdmin ? formVideo.classList.add("d-none") : "";
 
   // to load username
   username.innerHTML = localStorage.getItem("name");
@@ -291,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         body: dataForm,
       }).then(() => {
-        getAllVideos(sorted_topVoted, search_key);
+        getAllVideos(sorted_topVoted, search_key, filter_key);
         search.value = "";
         // TODO clear inputs after submit
         // dataForm.forEach(item => item.value = "")
@@ -302,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // for sort
   sort_topVote.addEventListener("click", function () {
     sorted_topVoted = true;
-    getAllVideos(sorted_topVoted, search_key);
+    getAllVideos(sorted_topVoted, search_key, filter_key);
     this.classList.add("btn-primary");
     this.classList.remove("btn-secondary");
     sort_new.classList.add("btn-secondary");
@@ -310,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })
   sort_new.addEventListener("click", function () {
     sorted_topVoted = false
-    getAllVideos(sorted_topVoted, search_key);
+    getAllVideos(sorted_topVoted, search_key , filter_key);
     this.classList.add("btn-primary");
     this.classList.remove("btn-secondary");
     sort_topVote.classList.add("btn-secondary");
@@ -320,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // search by topic
   search.addEventListener("input", debounce(function (e) {
     search_key = e.target.value;
-    getAllVideos(sorted_topVoted, search_key);
+    getAllVideos(sorted_topVoted, search_key , filter_key);
   }, 300))
 
   // logout to clear local storage
